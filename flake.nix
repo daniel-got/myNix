@@ -21,6 +21,7 @@
 	  pkgs.mkalias
 	  pkgs.git
 	  pkgs.neofetch
+	  pkgs.tmux
         ];
 
       users.users.dniel = {
