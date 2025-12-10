@@ -6,9 +6,10 @@
     nix-darwin.url = "github:nix-darwin/nix-darwin/master";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
     nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
+    home-manager.url = "github:nix-community/home-manager";
   };
 
-  outputs = inputs@{ self, nix-darwin, nixpkgs, nix-homebrew }:
+  outputs = inputs@{ self, nix-darwin, nixpkgs, nix-homebrew, home-manager }:
   let
     configuration = { pkgs, config, ... }: {
       # List packages installed in system profile. To search by name, run:
@@ -39,6 +40,7 @@
 	  "firefox"
 	  "iina"
 	  "the-unarchiver"
+	  "iterm2"
 	];
 	masApps = {
 	};
@@ -112,6 +114,42 @@
 	    autoMigrate = true;
 	  };
 	}
+	home-manager.darwinModules.home-manager
+        {
+          home-manager.useGlobalPkgs = true;
+          home-manager.useUserPackages = true;
+          home-manager.users.dniel = { pkgs, ... }: {
+            
+            # State Version Home Manager
+            home.stateVersion = "24.05";
+
+	    home.packages = [
+	      pkgs.zsh-powerlevel10k
+	      pkgs.meslo-lgs-nf
+	    ];
+
+            # Setup Oh My Zsh Disini
+            programs.zsh = {
+              enable = true;
+              enableCompletion = true;
+              autosuggestion.enable = true;
+              syntaxHighlighting.enable = true;
+              
+              oh-my-zsh = {
+                enable = true;
+                plugins = [ "git" "sudo" "docker"];
+              };
+
+	      initExtra = ''
+	      # Load Powerlevel10k dari Nix Store
+                source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme
+                
+                # Load config p10k jika file-nya ada (hasil dari p10k configure)
+                [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+              '';
+            };
+          };
+        }
       ];
     };
   };
