@@ -137,7 +137,7 @@
               
               oh-my-zsh = {
                 enable = true;
-                plugins = [ "git" "sudo" "docker"];
+                plugins = [ "git" "sudo" "docker" "web-search"];
               };
 
 	      initExtra = ''
