@@ -3,81 +3,81 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    
     nix-darwin.url = "github:nix-darwin/nix-darwin/master";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
+    
     nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
+    
     home-manager.url = "github:nix-community/home-manager";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = inputs@{ self, nix-darwin, nixpkgs, nix-homebrew, home-manager }:
   let
     configuration = { pkgs, config, ... }: {
-      # List packages installed in system profile. To search by name, run:
-      # $ nix-env -qaP | grep wget
+      
+      # --- System Settings ---
       nixpkgs.config.allowUnfree = true;
- 
-      environment.systemPackages =
-        [ pkgs.mkalias
-	  pkgs.git
-	  pkgs.neofetch
-	  pkgs.tmux
-        ];
+      nix.settings.experimental-features = [ "nix-command" "flakes" ];
+      
+      system.configurationRevision = self.rev or self.dirtyRev or null;
+      system.stateVersion = 6;
+      nixpkgs.hostPlatform = "aarch64-darwin";
 
-      users.users.dniel = {
-        name = "dniel";
-        home = "/Users/dniel";
-      };
-
-      system.primaryUser = "dniel";
-
-      homebrew = {
-      	enable = true;
-	brews = [
-	  "mas"
-	];
-	casks = [
-	  "hammerspoon"
-	  "firefox"
-	  "iina"
-	  "the-unarchiver"
-	  "iterm2"
-	];
-	masApps = {
-	};
-	onActivation.cleanup = "zap";
-	onActivation.autoUpdate = true ;
-	onActivation.upgrade = true ;
-      };
-
-      fonts.packages = [
-      	pkgs.nerd-fonts.jetbrains-mono
+      # --- System Packages (OS Level Tools) ---
+      environment.systemPackages = [
+        pkgs.mkalias
+        pkgs.git
+        pkgs.neofetch
+        pkgs.tmux
       ];
 
-	
-      # Necessary for using flakes on this system.
-      nix.settings.experimental-features = ["nix-command flakes"];
-
-      # Enable alternative shell support in nix-darwin.
-      # programs.fish.enable = true;
-
-      # Set Git commit hash for darwin-version.
-      system.configurationRevision = self.rev or self.dirtyRev or null;
-
-      # Used for backwards compatibility, please read the changelog before changing.
-      #system default settings
+      # --- MacOS Defaults ---
       system.defaults = {
         dock.autohide = true;
         finder.AppleShowAllExtensions = true;
       };
+      
+      # --- User Configuration ---
+      users.users.dniel = {
+        name = "dniel";
+        home = "/Users/dniel";
+      };
+      system.primaryUser = "dniel";
 
+      # --- Homebrew Config ---
+      homebrew = {
+        enable = true;
+        onActivation = {
+          autoUpdate = true;
+          upgrade = true;
+          cleanup = "zap"; # Hati-hati: ini akan menghapus aplikasi yang tidak terdaftar di sini
+        };
+        brews = [
+          "mas"
+        ];
+        casks = [
+          "hammerspoon"
+          "firefox"
+          "iina"
+          "the-unarchiver"
+          "iterm2"
+        ];
+      };
+
+      fonts.packages = [
+        pkgs.nerd-fonts.jetbrains-mono
+      ];
+
+      # --- Activation Script (Fix Spotlight Indexing for Nix Apps) ---
       system.activationScripts.applications.text = let
         env = pkgs.buildEnv {
           name = "system-applications";
           paths = config.environment.systemPackages;
-          pathsToLink = ["/Applications"];
+          pathsToLink = [ "/Applications" ];
         };
       in pkgs.lib.mkForce ''
-        # Set up applications.
         echo "setting up /Applications..." >&2
         rm -rf /Applications/Nix\ Apps
         mkdir -p /Applications/Nix\ Apps
@@ -87,71 +87,88 @@
           ${pkgs.mkalias}/bin/mkalias "$src" "/Applications/Nix Apps/$app_name"
         done
       '';
-
-      # $ darwin-rebuild changelog
-      system.stateVersion = 6;
-
-      # The platform the configuration will be used on.
-      nixpkgs.hostPlatform = "aarch64-darwin";
-
-      #default mac 
-
-
     };
   in
   {
-    # Build darwin flake using:
-    # $ darwin-rebuild build --flake .#simple
     darwinConfigurations."mac" = nix-darwin.lib.darwinSystem {
-      modules = [ 
-      	configuration
-	nix-homebrew.darwinModules.nix-homebrew
-	{
-	  nix-homebrew = {
-	    enable = true;
-	    enableRosetta = true;
-	    user = "dniel";
-	    autoMigrate = true;
-	  };
-	}
-	home-manager.darwinModules.home-manager
+      modules = [
+        configuration
+        nix-homebrew.darwinModules.nix-homebrew
+        {
+          nix-homebrew = {
+            enable = true;
+            enableRosetta = true;
+            user = "dniel";
+            autoMigrate = true;
+          };
+        }
+        home-manager.darwinModules.home-manager
         {
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
           home-manager.users.dniel = { pkgs, ... }: {
             
-            # State Version Home Manager
             home.stateVersion = "24.05";
 
-	    home.packages = [
-	      pkgs.zsh-powerlevel10k
-	      pkgs.meslo-lgs-nf
-	    ];
+            # --- GLOBAL DEVELOPMENT STACK ---
+            # Ini adalah tool yang tersedia di terminal (zsh) secara global.
+            home.packages = with pkgs; [
+              # 1. Shell Utils & Search
+              zsh-powerlevel10k
+              meslo-lgs-nf
+              ripgrep       # Wajib untuk Telescope/Vim
+              fd            # Wajib untuk file finding
+              jq            # JSON processor
+              fzf           # Fuzzy finder
+              tldr          # Man pages simple
+              wget
+              curl
+              unzip
 
-	    #setup neovim
-	    programs.neovim = {
-	  	enable = true;
-	  	defaultEditor = true;
-	  	viAlias = true;
-	  	vimAlias = true;
-	  
-	  # INI KUNCINYA.
-	  # Jangan biarkan Neovim mencari tools ini di global path yang mungkin tidak ada.
-	  # Inject dependencies ini langsung ke wrapper Neovim.
-		extraPackages = with pkgs; [
-		    gcc       # Dibutuhkan oleh Treesitter untuk compile parser
-		    gnumake
-		    nodejs_22    # Dibutuhkan oleh Copilot, Mason, dan banyak LSP
-		    ripgrep   # Wajib untuk Telescope/Fzf
-		    fd        # Wajib untuk file searching cepat
-		    unzip     # Dibutuhkan Mason
-		    wget
-		    curl
-		    tree-sitter # Core dependency
-		];
-	    };
+              # 2. Golang
+              go
+              gopls         # LSP Global
+              delve         # Debugger
 
-            # Setup Oh My Zsh Disini
+              # 3. Node.js / Web
+              nodejs_22     # Runtime (npm/node)
+              yarn
+              
+              # 4. PHP
+              php           # PHP CLI Global
+
+              # 5. Python
+              python3       # Python 3 Runtime
+
+              # 6. C/C++
+              gcc           # GNU Compiler
+              gnumake       # Make
+              cmake         # Build system
+
+              # 7. C# / .NET
+              dotnet-sdk    # .NET SDK Global
+            ];
+
+            # --- Neovim Config ---
+            programs.neovim = {
+              enable = true;
+              defaultEditor = true;
+              viAlias = true;
+              vimAlias = true;
+              # Dependency Neovim disamakan dengan home.packages agar tidak redudansi,
+              # tapi tetap di-inject ke wrapper agar "pasti ada" saat nvim jalan.
+              extraPackages = with pkgs; [
+                gcc
+                gnumake
+                nodejs_22
+                ripgrep
+                fd
+                unzip
+                tree-sitter
+              ];
+            };
+
+            # --- Zsh Config ---
             programs.zsh = {
               enable = true;
               enableCompletion = true;
@@ -160,14 +177,14 @@
               
               oh-my-zsh = {
                 enable = true;
-                plugins = [ "git" "sudo" "docker" "web-search"];
+                plugins = [ "git" "sudo" "docker" "web-search" ];
               };
 
-	      initExtra = ''
-	      # Load Powerlevel10k dari Nix Store
+              initExtra = ''
+                # Load Powerlevel10k
                 source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme
                 
-                # Load config p10k jika file-nya ada (hasil dari p10k configure)
+                # Load p10k config
                 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
               '';
             };
