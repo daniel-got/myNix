@@ -17,8 +17,7 @@
       nixpkgs.config.allowUnfree = true;
  
       environment.systemPackages =
-        [ pkgs.neovim
-	  pkgs.mkalias
+        [ pkgs.mkalias
 	  pkgs.git
 	  pkgs.neofetch
 	  pkgs.tmux
@@ -128,6 +127,29 @@
 	      pkgs.zsh-powerlevel10k
 	      pkgs.meslo-lgs-nf
 	    ];
+
+	    #setup neovim
+	    programs.neovim = {
+	  	enable = true;
+	  	defaultEditor = true;
+	  	viAlias = true;
+	  	vimAlias = true;
+	  
+	  # INI KUNCINYA.
+	  # Jangan biarkan Neovim mencari tools ini di global path yang mungkin tidak ada.
+	  # Inject dependencies ini langsung ke wrapper Neovim.
+		extraPackages = with pkgs; [
+		    gcc       # Dibutuhkan oleh Treesitter untuk compile parser
+		    gnumake
+		    nodejs_22    # Dibutuhkan oleh Copilot, Mason, dan banyak LSP
+		    ripgrep   # Wajib untuk Telescope/Fzf
+		    fd        # Wajib untuk file searching cepat
+		    unzip     # Dibutuhkan Mason
+		    wget
+		    curl
+		    tree-sitter # Core dependency
+		];
+	    };
 
             # Setup Oh My Zsh Disini
             programs.zsh = {
