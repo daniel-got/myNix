@@ -31,6 +31,7 @@
         pkgs.git
         pkgs.neofetch
         pkgs.tmux
+        pkgs.aria2
       ];
 
       # --- MacOS Defaults ---
@@ -159,6 +160,11 @@
               btop          # htop replacement (monitor resource)
               jq            # JSON processor
               tldr          # Man pages yang tidak membosankan
+
+              #fun 
+              ani-cli
+              ffmpeg
+              mpv
             ];
 
             # --- Neovim Config ---
