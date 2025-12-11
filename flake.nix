@@ -63,6 +63,8 @@
           "iina"
           "the-unarchiver"
           "iterm2"
+          "ghostty"        
+          "orbstack"      
         ];
       };
 
@@ -147,6 +149,16 @@
 
               # 7. C# / .NET
               dotnet-sdk    # .NET SDK Global
+
+              #linux looks like 
+              coreutils     # GNU ls, cat, etc (supaya script linux jalan)
+              eza           # ls on steroids
+              bat           # cat on steroids
+              zoxide        # cd on steroids
+              yazi          # Terminal File Manager (Ranger killer)
+              btop          # htop replacement (monitor resource)
+              jq            # JSON processor
+              tldr          # Man pages yang tidak membosankan
             ];
 
             # --- Neovim Config ---
@@ -174,6 +186,12 @@
               enableCompletion = true;
               autosuggestion.enable = true;
               syntaxHighlighting.enable = true;
+
+              shellAliases = {
+                ls = "eza --icons";
+                ll = "eza -l --icons --git -a"; # Bonus: List detail + git status
+                lt = "eza --tree --level=2 --icons"; # Bonus: Tree view
+              };
               
               oh-my-zsh = {
                 enable = true;
@@ -186,6 +204,37 @@
                 
                 # Load p10k config
                 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+              '';
+            };
+
+            #program zoxide
+            programs.zoxide = {
+              enable = true;
+              enableZshIntegration = true;
+              options = [ "--cmd cd" ];
+            };
+
+            #programs tmux
+            programs.tmux = {
+              enable = true;
+              shortcut = "a"; # Mengubah Prefix dari Ctrl+b jadi Ctrl+a (Jauh lebih ergonomis)
+              baseIndex = 1;  # Mulai hitung window dari 1, bukan 0 (biar sesuai tombol keyboard)
+              
+              extraConfig = ''
+                # Split panes dengan tombol yang masuk akal (| dan -)
+                bind | split-window -h
+                bind - split-window -v
+                unbind '"'
+                unbind %
+
+                # Pindah pane pakai gaya Vim (h,j,k,l)
+                bind h select-pane -L
+                bind j select-pane -D
+                bind k select-pane -U
+                bind l select-pane -R
+
+                # Aktifkan Mouse (biar bisa klik/resize pane pakai mouse saat malas)
+                set -g mouse on
               '';
             };
           };
