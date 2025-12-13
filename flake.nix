@@ -32,6 +32,7 @@
         pkgs.neofetch
         pkgs.tmux
         pkgs.aria2
+        pkgs.maccy
       ];
 
       # --- MacOS Defaults ---
