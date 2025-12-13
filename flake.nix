@@ -66,6 +66,7 @@
           "iterm2"
           "ghostty"        
           "orbstack"      
+          "steam"
         ];
       };
 
@@ -165,6 +166,14 @@
               ani-cli
               ffmpeg
               mpv
+
+              #database
+              postgresql
+              openssl 
+              zlib
+
+              #web-developing
+              posting
             ];
 
             # --- Neovim Config ---
