@@ -58,6 +58,8 @@
         };
         brews = [
           "mas"
+          "composer"
+          "mysql"
         ];
         casks = [
           "hammerspoon"
@@ -175,6 +177,8 @@
 
               #web-developing
               posting
+              docker_29
+              docker-compose
             ];
 
             # --- Neovim Config ---
