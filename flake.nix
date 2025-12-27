@@ -73,8 +73,26 @@
         ];
       };
 
-      fonts.packages = [
-        pkgs.nerd-fonts.jetbrains-mono
+      fonts.packages = with pkgs; [
+        # Nerd Fonts
+        nerd-fonts.jetbrains-mono
+        nerd-fonts.fira-code
+        
+        # Serif fonts (alternatif untuk Courage)
+        liberation_ttf
+        
+        # Sans-serif fonts
+        inter
+        ubuntu-classic
+        
+        # Monospace fonts
+        fira-code
+        jetbrains-mono
+        
+        # Noto fonts (comprehensive)
+        noto-fonts
+        noto-fonts-cjk-sans
+        noto-fonts-color-emoji
       ];
 
       # --- Activation Script (Fix Spotlight Indexing for Nix Apps) ---
