@@ -60,6 +60,9 @@
           "mas"
           "composer"
           "mysql"
+          "lazygit"
+          "tea"
+          "ghostscript"
         ];
         casks = [
           "hammerspoon"
@@ -70,6 +73,7 @@
           "ghostty"        
           "orbstack"      
           "steam"
+          "chromedriver"
         ];
       };
 
