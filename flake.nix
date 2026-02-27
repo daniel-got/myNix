@@ -74,6 +74,7 @@
           "orbstack"      
           "steam"
           "chromedriver"
+          "localsend"
         ];
       };
 
