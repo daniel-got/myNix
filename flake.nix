@@ -54,7 +54,7 @@
         onActivation = {
           autoUpdate = true;
           upgrade = true;
-          cleanup = "zap"; # Hati-hati: ini akan menghapus aplikasi yang tidak terdaftar di sini
+          cleanup = "zap";
         };
         brews = [
           "mas"
@@ -79,22 +79,13 @@
       };
 
       fonts.packages = with pkgs; [
-        # Nerd Fonts
         nerd-fonts.jetbrains-mono
         nerd-fonts.fira-code
-        
-        # Serif fonts (alternatif untuk Courage)
         liberation_ttf
-        
-        # Sans-serif fonts
         inter
         ubuntu-classic
-        
-        # Monospace fonts
         fira-code
         jetbrains-mono
-        
-        # Noto fonts (comprehensive)
         noto-fonts
         noto-fonts-cjk-sans
         noto-fonts-color-emoji
@@ -140,78 +131,104 @@
             
             home.stateVersion = "24.05";
 
-            # --- GLOBAL DEVELOPMENT STACK ---
-            # Ini adalah tool yang tersedia di terminal (zsh) secara global.
+            # ─────────────────────────────────────────────────────────────────
+            # ENV VARIABLES
+            # Diset di sini agar semua program (termasuk Neovim) bisa membaca.
+            # ─────────────────────────────────────────────────────────────────
+            home.sessionVariables = {
+              # JAVA_HOME → path JDK 21 dari nix store, selalu konsisten
+              JAVA_HOME  = "${pkgs.jdk21}";
+              # LOMBOK_JAR → dipakai ftplugin/java.lua untuk vmArgs jdtls
+              LOMBOK_JAR = "${pkgs.lombok}/share/java/lombok.jar";
+            };
+
+            home.sessionPath = [
+              "${pkgs.jdk21}/bin"
+            ];
+
+            # ─────────────────────────────────────────────────────────────────
+            # GLOBAL DEVELOPMENT STACK
+            # ─────────────────────────────────────────────────────────────────
             home.packages = with pkgs; [
               # 1. Shell Utils & Search
               zsh-powerlevel10k
               meslo-lgs-nf
-              ripgrep       # Wajib untuk Telescope/Vim
-              fd            # Wajib untuk file finding
-              jq            # JSON processor
-              fzf           # Fuzzy finder
-              tldr          # Man pages simple
+              ripgrep
+              fd
+              fzf
+              tldr
               wget
               curl
               unzip
 
               # 2. Golang
               go
-              gopls         # LSP Global
-              delve         # Debugger
+              gopls
+              delve
 
               # 3. Node.js / Web
-              nodejs_22     # Runtime (npm/node)
+              nodejs_22
               yarn
               
               # 4. PHP
-              php           # PHP CLI Global
+              php
 
               # 5. Python
-              python3       # Python 3 Runtime
+              python3
 
               # 6. C/C++
-              gcc           # GNU Compiler
-              gnumake       # Make
-              cmake         # Build system
+              gcc
+              gnumake
+              cmake
 
               # 7. C# / .NET
-              dotnet-sdk    # .NET SDK Global
+              dotnet-sdk
 
-              #linux looks like 
-              coreutils     # GNU ls, cat, etc (supaya script linux jalan)
-              eza           # ls on steroids
-              bat           # cat on steroids
-              zoxide        # cd on steroids
-              yazi          # Terminal File Manager (Ranger killer)
-              btop          # htop replacement (monitor resource)
-              jq            # JSON processor
-              tldr          # Man pages yang tidak membosankan
+              # ── 8. Java Stack ────────────────────────────────────────────
+              jdk21            # JDK 21 LTS — runtime + compiler (javac, java)
+              maven            # Build tool berbasis XML (pom.xml) — umum di kampus
+              gradle           # Build tool modern (build.gradle) — alternatif Maven
+              google-java-format # Formatter resmi gaya Google
+              lombok           # Annotation processor: @Getter, @Setter, @Builder, dll
+              # ─────────────────────────────────────────────────────────────
 
-              #fun 
+              # Linux-like tools
+              coreutils
+              eza
+              bat
+              zoxide
+              yazi
+              btop
+              jq
+
+              # Fun
               ani-cli
               ffmpeg
               mpv
 
-              #database
+              # Database
               postgresql
               openssl 
               zlib
 
-              #web-developing
+              # Web dev
               posting
               docker_29
               docker-compose
+              drawio
             ];
 
-            # --- Neovim Config ---
+            # ─────────────────────────────────────────────────────────────────
+            # NEOVIM
+            # extraPackages = binary yang di-inject ke dalam PATH wrapper nvim.
+            # Ini memastikan jdtls, java, dan formatter selalu tersedia
+            # bahkan jika user menjalankan nvim dari luar shell (contoh: GUI).
+            # ─────────────────────────────────────────────────────────────────
             programs.neovim = {
               enable = true;
               defaultEditor = true;
               viAlias = true;
               vimAlias = true;
-              # Dependency Neovim disamakan dengan home.packages agar tidak redudansi,
-              # tapi tetap di-inject ke wrapper agar "pasti ada" saat nvim jalan.
               extraPackages = with pkgs; [
                 gcc
                 gnumake
@@ -220,6 +237,12 @@
                 fd
                 unzip
                 tree-sitter
+
+                # ── Java untuk Neovim ───────────────────────────────────────
+                jdt-language-server  # JDTLS — binary `jdtls` dipanggil nvim-jdtls
+                jdk21                # Java runtime yang dipakai jdtls
+                google-java-format   # Dipakai conform.nvim untuk format-on-save
+                # ────────────────────────────────────────────────────────────
               ];
             };
 
@@ -232,8 +255,8 @@
 
               shellAliases = {
                 ls = "eza --icons";
-                ll = "eza -l --icons --git -a"; # Bonus: List detail + git status
-                lt = "eza --tree --level=2 --icons"; # Bonus: Tree view
+                ll = "eza -l --icons --git -a";
+                lt = "eza --tree --level=2 --icons";
               };
               
               oh-my-zsh = {
@@ -242,41 +265,30 @@
               };
 
               initExtra = ''
-                # Load Powerlevel10k
                 source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme
-                
-                # Load p10k config
                 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
               '';
             };
 
-            #program zoxide
             programs.zoxide = {
               enable = true;
               enableZshIntegration = true;
               options = [ "--cmd cd" ];
             };
 
-            #programs tmux
             programs.tmux = {
               enable = true;
-              shortcut = "a"; # Mengubah Prefix dari Ctrl+b jadi Ctrl+a (Jauh lebih ergonomis)
-              baseIndex = 1;  # Mulai hitung window dari 1, bukan 0 (biar sesuai tombol keyboard)
-              
+              shortcut = "a";
+              baseIndex = 1;
               extraConfig = ''
-                # Split panes dengan tombol yang masuk akal (| dan -)
                 bind | split-window -h
                 bind - split-window -v
                 unbind '"'
                 unbind %
-
-                # Pindah pane pakai gaya Vim (h,j,k,l)
                 bind h select-pane -L
                 bind j select-pane -D
                 bind k select-pane -U
                 bind l select-pane -R
-
-                # Aktifkan Mouse (biar bisa klik/resize pane pakai mouse saat malas)
                 set -g mouse on
               '';
             };
