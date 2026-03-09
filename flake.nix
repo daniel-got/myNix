@@ -160,6 +160,8 @@
               wget
               curl
               unzip
+              delta 
+              glow
 
               # 2. Golang
               go
